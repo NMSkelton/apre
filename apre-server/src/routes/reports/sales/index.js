@@ -78,4 +78,54 @@ router.get('/regions/:region', (req, res, next) => {
   }
 });
 
+/**
+ * @description
+ *
+ * GET /by-customer-salesperson
+ *
+ * Fetches sales data grouped by customer and salesperson, including
+ * the total sales amount and number of transactions for each
+ * customer/salesperson pairing. Results are sorted alphabetically
+ * by customer, then by salesperson.
+ *
+ */
+router.get('/by-customer-salesperson', (req, res, next) => {
+  try {
+    mongo (async db => {
+      const salesByCustomerSalesperson = await db.collection('sales').aggregate([
+        {
+          $group: {
+            _id: {
+              customer: '$customer',
+              salesperson: '$salesperson'
+            },
+            totalSales: { $sum: '$amount' },
+            transactionCount: { $sum: 1 }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            customer: '$_id.customer',
+            salesperson: '$_id.salesperson',
+            totalSales: 1,
+            transactionCount: 1
+          }
+        },
+        {
+          $sort: {
+            customer: 1,
+            salesperson: 1
+          }
+        }
+      ]).toArray();
+
+      res.send(salesByCustomerSalesperson);
+    }, next);
+  } catch (err) {
+    console.error('Error getting sales data by customer and salesperson: ', err);
+    next(err);
+  }
+});
+
 module.exports = router;

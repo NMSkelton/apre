@@ -143,3 +143,88 @@ describe('Apre Sales Report API - Sales by Region', () => {
     });
   });
 });
+
+// Test the sales report API
+describe('Apre Sales Report API - Sales by Customer and Salesperson', () => {
+  beforeEach(() => {
+    mongo.mockClear();
+  });
+
+  // Test the sales/by-customer-salesperson endpoint
+  it('should fetch sales data grouped by customer and salesperson', async () => {
+    mongo.mockImplementation(async (callback) => {
+      const db = {
+        collection: jest.fn().mockReturnThis(),
+        aggregate: jest.fn().mockReturnValue({
+          toArray: jest.fn().mockResolvedValue([
+            {
+              customer: 'Acme Corp',
+              salesperson: 'John Doe',
+              totalSales: 2500,
+              transactionCount: 3
+            },
+            {
+              customer: 'Acme Corp',
+              salesperson: 'Jane Smith',
+              totalSales: 1200,
+              transactionCount: 1
+            }
+          ])
+        })
+      };
+      await callback(db);
+    });
+
+    const response = await request(app).get('/api/reports/sales/by-customer-salesperson'); // Send a GET request to the by-customer-salesperson endpoint
+    expect(response.status).toBe(200); // Expect a 200 status code
+
+    // Expect the response body to match the expected data
+    expect(response.body).toEqual([
+      {
+        customer: 'Acme Corp',
+        salesperson: 'John Doe',
+        totalSales: 2500,
+        transactionCount: 3
+      },
+      {
+        customer: 'Acme Corp',
+        salesperson: 'Jane Smith',
+        totalSales: 1200,
+        transactionCount: 1
+      }
+    ]);
+  });
+
+  it('should return 200 and an empty array if no sales data is found', async () => {
+    // Mock the MongoDB implementation
+    mongo.mockImplementation(async (callback) => {
+      const db = {
+        collection: jest.fn().mockReturnThis(),
+        aggregate: jest.fn().mockReturnValue({
+          toArray: jest.fn().mockResolvedValue([])
+        })
+      };
+      await callback(db);
+    });
+
+    // Make a request to the endpoint
+    const response = await request(app).get('/api/reports/sales/by-customer-salesperson');
+
+    // Assert the response
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+  });
+
+  it('should return 404 for an invalid endpoint', async () => {
+    // Make a request to an invalid endpoint
+    const response = await request(app).get('/api/reports/sales/invalid-endpoint');
+
+    // Assert the response
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({
+      message: 'Not Found',
+      status: 404,
+      type: 'error'
+    });
+  });
+});
