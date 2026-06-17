@@ -17,8 +17,9 @@ import { environment } from '../../../../environments/environment';
       }
       <form [formGroup]="newUserForm" (ngSubmit)="addUser();" class="form">
         <div class="form__group">
+  <!-- Added placeholder text to improve user guidance -->
           <label class="label" for="username">Username<span class="required">*</span></label>
-          <input class="input" type="text" formControlName="username" id="username" name="username">
+          <input class="input" type="text" formControlName="username" id="username" name="username" placeholder="Enter your username">
         </div>
 
         <div class="form__group">
@@ -27,8 +28,9 @@ import { environment } from '../../../../environments/environment';
         </div>
 
         <div class="form__group">
-          <label class="label" for="password">Email<span class="required">*</span></label>
-          <input class="input" type="text" formControlName="email" id="email" name="email">
+  <!-- Corrected label association for improved form usability, added placeholder text and tooltip to improve user guidance -->
+          <label class="label" for="email">Email<span class="required">*</span></label>
+          <input class="input" type="text" formControlName="email" id="email" name="email" title="Please enter a valid email address" placeholder="Enter your email address">
         </div>
 
         <div class="form__group">
@@ -41,7 +43,8 @@ import { environment } from '../../../../environments/environment';
         </div>
 
         <div class="form__actions">
-          <input type="submit" class="button button--primary" value="Submit">
+  <!-- Updated submit button text to better reflect form action -->
+          <input type="submit" class="button button--primary" value="Create User">
         </div>
       </form>
       <br />
