@@ -55,8 +55,7 @@ import { TableComponent } from '../../../shared/table/table.component';
   `
 })
 export class SalesByCustomerSalespersonComponent implements OnInit {
-  // Rows passed to app-table; each row is augmented with display-friendly
-  // keys (Customer, Salesperson, Total Sales, Transactions) for the headers
+  // Rows passed to app-table; each row is augmented with display-friendly keys (Customer, Salesperson, Total Sales, Transactions) for the headers
   salesData: any[] = [];
 
   // Populated and shown in the template if the HTTP request fails
@@ -68,9 +67,7 @@ export class SalesByCustomerSalespersonComponent implements OnInit {
   ngOnInit(): void {
     this.http.get(`${environment.apiBaseUrl}/reports/sales/by-customer-salesperson`).subscribe({
       next: (data: any) => {
-        // Map raw API fields (customer, salesperson, totalSales,
-        // transactionCount) onto the column names used by app-table,
-        // while keeping the original fields via the spread
+        // Map raw API fields (customer, salesperson, totalSales, transactionCount) onto the column names used by app-table, while keeping the original fields via the spread
         this.salesData = data.map((row: any) => ({
           ...row,
           'Customer': row.customer,
