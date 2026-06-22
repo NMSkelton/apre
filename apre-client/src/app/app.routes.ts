@@ -26,6 +26,7 @@ import { ChannelRatingByMonthComponent } from './reports/customer-feedback/chann
 import { CustomerFeedbackComponent } from './reports/customer-feedback/customer-feedback.component';
 import { SalesByRegionTabularComponent } from './reports/sales/sales-by-region-tabular/sales-by-region-tabular.component';
 import { SalesByCustomerSalespersonComponent } from './reports/sales/sales-by-customer-salesperson/sales-by-customer-salesperson.component';
+import { ResolutionTimeByAgentComponent } from './reports/agent-performance/resolution-time-by-agent/resolution-time-by-agent.component';
 
 // Export user-management routes
 export const userManagementRoutes: Routes = [
@@ -70,6 +71,11 @@ export const agentPerformanceRoutes: Routes = [
   {
     path: 'call-duration-by-date-range',
     component: CallDurationByDateRangeComponent
+  },
+  // Added route to resolution time by agent component
+  {
+    path: 'resolution-time-by-agent',
+    component: ResolutionTimeByAgentComponent
   }
 ];
 

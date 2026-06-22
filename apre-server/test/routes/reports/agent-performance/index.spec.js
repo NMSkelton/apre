@@ -73,3 +73,68 @@ describe('Apre Agent Performance API', () => {
     });
   });
 });
+
+// Test the agent performance by resolution time API
+describe('Apre Agent Performance API - Resolution Time', () => {
+  beforeEach(() => {
+    mongo.mockClear();
+  });
+
+  // Test the resolution-time endpoint
+  it('should fetch average resolution time data grouped by agent', async () => {
+    mongo.mockImplementation(async (callback) => {
+      const db = {
+        collection: jest.fn().mockReturnThis(),
+        aggregate: jest.fn().mockReturnValue({
+          toArray: jest.fn().mockResolvedValue([
+            {
+              agents: ['Agent A', 'Agent B'],
+              resolutionTimes: [12.5, 9.75]
+            }
+          ])
+        })
+      };
+      await callback(db);
+    });
+
+    const response = await request(app).get('/api/reports/agent-performance/resolution-time'); // Send a GET request to the resolution-time endpoint
+    expect(response.status).toBe(200); // Expect a 200 status code
+
+    // Expect the response body to match the expected data
+    expect(response.body).toEqual([
+      {
+        agents: ['Agent A', 'Agent B'],
+        resolutionTimes: [12.5, 9.75]
+      }
+    ]);
+  });
+
+  // Test the resolution-time endpoint when no agent performance data exists
+  it('should return 200 and an empty array if no resolution time data is found', async () => {
+    mongo.mockImplementation(async (callback) => {
+      const db = {
+        collection: jest.fn().mockReturnThis(),
+        aggregate: jest.fn().mockReturnValue({
+          toArray: jest.fn().mockResolvedValue([])
+        })
+      };
+      await callback(db);
+    });
+
+    const response = await request(app).get('/api/reports/agent-performance/resolution-time'); // Send a GET request to the resolution-time endpoint
+    expect(response.status).toBe(200); // Expect a 200 status code
+    expect(response.body).toEqual([]); // Expect an empty array when there is no data to aggregate
+  });
+
+  // Test the resolution-time endpoint with an invalid route
+  it('should return 404 for an invalid endpoint', async () => {
+    const response = await request(app).get('/api/reports/agent-performance/invalid-endpoint'); // Send a GET request to an invalid endpoint
+    expect(response.status).toBe(404); // Expect a 404 status code
+    // Expect the response body to match the expected data
+    expect(response.body).toEqual({
+      message: 'Not Found',
+      status: 404,
+      type: 'error'
+    });
+  });
+});

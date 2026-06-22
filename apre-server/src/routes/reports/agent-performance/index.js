@@ -93,4 +93,75 @@ router.get('/call-duration-by-date-range', (req, res, next) => {
   }
 });
 
+/**
+ * @description
+ *
+ * GET /resolution-time
+ *
+ * Fetches average issue resolution time per agent, sorted by agent name.
+ *
+ * Example:
+ * fetch('/resolution-time')
+ *  .then(response => response.json())
+ *  .then(data => console.log(data));
+ */
+router.get('/resolution-time', (req, res, next) => {
+  try {
+    console.log('Fetching agent performance report by resolution time');
+
+    mongo(async db => {
+      const data = await db.collection('agentPerformance').aggregate([
+        {
+          $lookup: {
+            from: 'agents',
+            localField: 'agentId',
+            foreignField: 'agentId',
+            as: 'agentDetails'
+          }
+        },
+        {
+          $unwind: '$agentDetails'
+        },
+        {
+          $group: {
+            _id: '$agentDetails.name',
+            averageResolutionTime: { $avg: '$resolutionTime' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            agent: '$_id',
+            averageResolutionTime: { $round: ['$averageResolutionTime', 2] }
+          }
+        },
+        {
+          $sort: {
+            agent: 1
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            agents: { $push: '$agent' },
+            resolutionTimes: { $push: '$averageResolutionTime' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            agents: 1,
+            resolutionTimes: 1
+          }
+        }
+      ]).toArray();
+
+      res.send(data);
+    }, next);
+  } catch (err) {
+    console.error('Error in /resolution-time', err);
+    next(err);
+  }
+});
+
 module.exports = router;
