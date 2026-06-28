@@ -92,4 +92,131 @@ router.get('/channel-rating-by-month', (req, res, next) => {
   }
 });
 
+
+/**
+ * @description
+ *
+ * GET /distinct-years
+ *
+ * Fetches a sorted list of distinct years present in the customerFeedback
+ * collection. Used by the customer-feedback-by-year component to populate
+ * its year dropdown on init.
+ *
+ * Example:
+ * fetch('/distinct-years')
+ *  .then(response => response.json())
+ *  .then(data => console.log(data));
+ */
+router.get('/distinct-years', (req, res, next) => {
+  try {
+    mongo(async db => {
+      const data = await db.collection('customerFeedback').aggregate([
+        {
+          $addFields: {
+            date: { $toDate: '$date' }
+          }
+        },
+        {
+          $group: {
+            _id: { $year: '$date' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            year: '$_id'
+          }
+        },
+        {
+          $sort: { year: 1 }
+        }
+      ]).toArray();
+
+      res.send(data);
+    }, next);
+  } catch (err) {
+    console.error('Error in /distinct-years', err);
+    next(err);
+  }
+});
+
+/**
+ * @description
+ *
+ * GET /customer-feedback-by-year
+ *
+ * Fetches average customer feedback ratings grouped by channel for a
+ * specified year. Returns parallel arrays of channel names and rating averages.
+ *
+ * Example:
+ * fetch('/customer-feedback-by-year?year=2023')
+ *  .then(response => response.json())
+ *  .then(data => console.log(data));
+ */
+router.get('/customer-feedback-by-year', (req, res, next) => {
+  try {
+    const { year } = req.query;
+
+    if (!year) {
+      return next(createError(400, 'year is required'));
+    }
+
+    mongo(async db => {
+      const data = await db.collection('customerFeedback').aggregate([
+        {
+          $addFields: {
+            date: { $toDate: '$date' }
+          }
+        },
+        {
+          $match: {
+            $expr: { $eq: [{ $year: '$date' }, Number(year)] }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              channel: '$channel',
+              year: { $year: '$date' }
+            },
+            ratingAvg: { $avg: '$rating' }
+          }
+        },
+        {
+          $group: {
+            _id: '$_id.channel',
+            ratingAvg: { $push: '$ratingAvg' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            channel: '$_id',
+            ratingAvg: 1
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            channels: { $push: '$channel' },
+            ratingAvg: { $push: '$ratingAvg' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            channels: 1,
+            ratingAvg: 1
+          }
+        }
+      ]).toArray();
+
+      res.send(data);
+    }, next);
+  } catch (err) {
+    console.error('Error in /customer-feedback-by-year', err);
+    next(err);
+  }
+});
+
 module.exports = router;

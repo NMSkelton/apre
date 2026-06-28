@@ -33,7 +33,7 @@ import { CommonModule } from '@angular/common';
       </table>
       <div class="pagination">
         <button class="button button--primary" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
-        <span class="pagination__info">Page {{ currentPage }}</span>
+<span class="pagination__info">Page {{ currentPage }} of {{ totalPages }}</span>
         <button class="button button--primary" (click)="changePage(currentPage + 1)" [disabled]="currentPage * recordsPerPage >= data.length">Next</button>
       </div>
     </div>
@@ -133,6 +133,10 @@ export class TableComponent implements OnInit, OnChanges {
     const start = (this.currentPage - 1) * this.recordsPerPage;
     const end = start + this.recordsPerPage;
     return this.data.slice(start, end);
+  }
+
+    get totalPages(): number {
+    return Math.max(1, Math.ceil(this.data.length / this.recordsPerPage));
   }
 
   sortData(column: string) {
